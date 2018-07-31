@@ -1,5 +1,6 @@
 package com.cgm.internship.week2day2.part2;
 
+import java.text.CollationElementIterator;
 import java.time.LocalDate;
 import java.time.Month;
 import java.time.Period;
@@ -58,10 +59,35 @@ public class Main {
         System.out.println("People and the number of their kids: "+noOfKidsPerPerson);
 
         //names of children who have an email address
-        List<String> namesOfChildrenWithEmailAdress = persons.stream().flatMap( p-> p.getChildren().stream()).filter(children -> children
-                .getEmailAddress()!=null).collect(Collectors.toMap(Person::getFirstName,Person::getLastName));
-        System.out.println(namesOfChildrenWithEmailAdress);
+        List<String> namesOfChildrenWithEmailAddress = persons.stream().flatMap( p-> p.getChildren().stream()).filter(children -> children
+                .getEmailAddress()!=null).map(Person::getFullName).collect(toList());
+        System.out.println("Children with an email address: "+namesOfChildrenWithEmailAddress);
 
+        //average age of children for people born after 1980
+        double averageAgeOfChildrenBornAfter1980 =persons.stream().filter(person -> person.getDateOfBirth().getYear()>1980)
+                .flatMap(p->p.getChildren().stream()).mapToDouble(p->Period.between(p.getDateOfBirth(),LocalDate.now()).getYears())
+                .average().getAsDouble();
+        System.out.println("Average age of children for people born after 1980: "+averageAgeOfChildrenBornAfter1980);
+
+
+        //get all persons that are born in the summer and have  at least two kids
+        List<Person> personBornInSummerWith2OrMoreKids = persons.stream().filter(person -> person.getDateOfBirth()
+                .getMonthValue()>=7).filter(person -> person.getDateOfBirth().getMonthValue()<=9)
+                .filter(person -> person.getChildren().size()>=2).collect(toList());
+        System.out.println("People born in summer with at least 2 children: "+personBornInSummerWith2OrMoreKids);
+
+        //names of persons with underage children
+        List<String> nameOfPersonsWithUnderageChildren = persons.stream().filter(person -> person.getChildren().stream()
+                .anyMatch(child->child.getDateOfBirth().plusYears(18).isAfter(LocalDate.now())))
+                .map(Person::getFullName).collect(Collectors.toList());
+        System.out.println("Persons with underage children: "+nameOfPersonsWithUnderageChildren);
+
+
+        //names of persons that celebrate their birthday in the same month as one of their own children, sorted by age
+        List<String> nameOfPersonsWithBdaysMonthAsChildren = persons.stream().filter(person->person.getChildren().stream()
+                .anyMatch(child->child.getDateOfBirth().getMonth().equals(person.getDateOfBirth().getMonth()))).sorted(Comparator.comparing(Person::getDateOfBirth))
+                .map(Person::getFullName).collect(Collectors.toList());
+        System.out.println("Persons that celebrate their birthday in the same month as one of their own children: "+nameOfPersonsWithBdaysMonthAsChildren);
 
     }
 }
